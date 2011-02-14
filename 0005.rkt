@@ -2,59 +2,68 @@
 
 (require racket/stream
          racket/generator)
-#|
-(define (try-solve-1 [i 10])
-  (define (check-solution? n)
-    (for/and ([j (in-range 1 (add1 i))])
-      (zero? (remainder n j))))
-  (let/ec break
-    (for ([j (in-naturals 1)])
-      (when (check-solution? j)
-        (break j)))))
-
-
-(define (try-solve-2 [i 10])
-  (if (= 1 i)
-      1
-      (let ([p (try-solve-2 (sub1 i))])
-        (if (zero? (remainder p i))
-            p
-            (* p i)))))
-|#
 
 (define (in-primes)
-  (in-generator
-   (define (next-prime n s)
-     (define (factor? i)
-       (zero? (remainder i n)))
-     
-     (let* ([s (stream-filter (lambda (i) (not (factor? i))) s)]
-            [n (stream-first s)])
-       (yield n)
-       (next-prime n s)))
-   
-   (yield 2)
-   (next-prime 2 (in-naturals 2))))
+  (make-do-sequence
+   (lambda ()
+     (values 
+      (lambda (s)
+        (stream-first s))
+      (lambda (s)
+        (let ([p (stream-first s)])
+          (stream-filter
+           (lambda (n)
+             (not (zero? (remainder n p))))
+           (stream-rest s))))      
+      (in-naturals 2)
+      (lambda a #t)
+      (lambda a #t)
+      (lambda a #t)))))
 
-(define (prime? n)
-  (let/ec break
-    (for ([p (in-primes)])
-      (when (> p n) (break #f))
-      (when (= p n) (break #t)))))
+(define-values (factors ftable)
+  (let ([table (make-hash '((1)))])
+    (values 
+     (lambda (n)
+       (cond [(hash-ref table n #f) => values]
+             [else
+              (let loop ([p* (in-primes)])
+                (let ([p (stream-first p*)])
+                  (if (zero? (remainder n p))
+                      (let ([f* (cons p (factors 
+                                         (quotient n p)))])
+                        (hash-set! table n f*)
+                        f*)
+                      (loop (stream-rest p*)))))]))
+     table)))
 
-(define (factorize1 n)
-  (let/ec break
-    (for/fold ([n n] [f* null]) ([p (in-primes)])
-      (when (prime? n)
-        (break (cons n f*)))
-      
-      (let loop ([n n] [f* f*])
-        (if (prime? n)
-            (break (cons n f*))
-            (let-values ([(q r) (quotient/remainder n p)])
-              (if (zero? r)
-                  (loop q (cons p f*))
-                  (values n f*))))))))
+(define (collect-factors f* [p* (in-primes)] [c 0] [c* null])
+  (cond [(null? f*)            (if (zero? c)
+                                   c*
+                                   (append c* (list c)))]
+        [(= (car f*)
+            (stream-first p*)) (collect-factors (cdr f*)
+                                                p*
+                                                (add1 c)
+                                                c*)]
+        [else                  (collect-factors f*
+                                                (stream-rest p*)
+                                                0
+                                                (append c* (list c)))]))
+                                
+(define (max-factors f1* f2* [acc null])
+  (cond [(null? f1*) (append acc f2*)]
+        [(null? f2*) (append acc f1*)]
+        [else
+         (max-factors (cdr f1*) (cdr f2*)
+                      (append acc
+                              (list (max (car f1*)
+                                         (car f2*)))))]))
+
+(define (solve n)
+  (let ([f* (for/fold ([f* null]) ([i (in-range 2 (add1 n))])
+              (max-factors f* (collect-factors (factors i))))])
+    (for/fold ([r 1]) ([p (in-primes)] [f (in-list f*)])
+      (* r (expt p f)))))
 
 
-      
+
