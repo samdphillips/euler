@@ -22,6 +22,13 @@ Find the largest palindrome made from the product of two
       (let-values ([(q r) (quotient/remainder n 10)])
         (reverse-num q (+ r (* a 10))))))
 
+(define (palindrome n)
+  (let ([m (quotient n 2)])
+    (stream-map
+     (lambda (x)
+       (+ (* x (expt 10 m))
+          (reverse-num x)))
+     (digits m))))
 
 
-     
+
