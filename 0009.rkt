@@ -15,10 +15,10 @@ Find the product abc.
 
 (require racket/stream)
 
-(define triples
+(define (triples n)
   (apply stream-append
-         (for/list ([c (in-range 335 997)])
-           (let ([d (- 1000 c)])
+         (for/list ([c (in-range 1 n)])
+           (let ([d (- n c)])
              (stream-filter
               (lambda (a b c)
                 (< a b c))
@@ -27,7 +27,7 @@ Find the product abc.
                  (values a (- d a) c))
                (in-range 1 (quotient d 2))))))))
 
-(define (solve)
-  (apply * (for/or ([(a b c) triples])
+(define (solve [n 1000])
+  (apply * (for/or ([(a b c) (triples n)])
              (and (= (+ (* a a) (* b b)) (* c c))
                   (list a b c)))))
