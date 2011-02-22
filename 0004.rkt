@@ -30,5 +30,16 @@ Find the largest palindrome made from the product of two
           (reverse-num x)))
      (digits m))))
 
-
-
+(define (solve [n 6])
+  (let ([h  (quotient n 2)])        
+    (let next-p ([p* (palindrome n)])
+      (let ([p  (stream-first p*)]
+            [p* (stream-rest p*)])
+        (let step-t ([t (inexact->exact (ceiling (sqrt p)))])
+          (if (> t (expt 10 h))
+              (next-p p*)
+              (let-values ([(q r) (quotient/remainder p t)])
+                (if (zero? r)
+                    (values p t q)
+                    (step-t (add1 t))))))))))
+    
