@@ -60,64 +60,36 @@ direction (up, down, left, right, or diagonally) in the
        (+ y (* 20 x))))
 
 (define (cell x y)
-  (let ([i (pos->index x y)])
-    (if i
-        (list (vector-ref the-grid i))
-        null)))
+  (vector-ref the-grid (pos->index x y)))    
 
 (define (row x y)
-  (for/fold ([n* null]) ([y (in-range y (min 20 (+ y 4)))])
-    (append n* (cell x y))))
+  (for/fold ([n 1]) ([y (in-range y (+ y 4))])
+    (* n (cell x y))))
 
 (define (col x y)
-  (for/fold ([n* null]) ([x (in-range x (min 20 (+ x 4)))])
-    (append n* (cell x y))))
+  (for/fold ([n 1]) ([x (in-range x (+ x 4))])
+    (* n (cell x y))))
 
-(define (diag x y)
-  (for/fold ([n* null]) ([x (in-range x (+ x 4))]
-                         [y (in-range y (+ y 4))])
-    (append n* (cell x y))))
+(define (diag-down x y)
+  (for/fold ([n 1]) ([x (in-range x (+ x 4))]
+                     [y (in-range y (+ y 4))])
+    (* n (cell x y))))
 
-(define (pad n o)
-  (let* ([s (format "~a" o)]
-         [w (apply string 
-                   (build-list (- n (string-length s))
-                               (lambda (x) #\space)))])
-    (string-append s w)))
+(define (diag-up x y)
+  (for/fold ([n 1]) ([x (in-range x (- x 4) -1)]
+                     [y (in-range y (+ y 4))])
+    (* n (cell x y))))
 
-(define (lpad n o)
-  (let* ([s (format "~a" o)]
-         [w (apply string 
-                   (build-list (- n (string-length s))
-                               (lambda (x) #\space)))])
-    (string-append w s)))
-
-(define (commify o)  
-  (define (add-commas [c (string->list (format "~a" o))])
-    (cond [(null? c) c]
-          [(zero? (modulo (length c) 3)) (list* #\, (car c) 
-                                                (add-commas (cdr c)))]
-          [else (cons (car c) (add-commas (cdr c)))]))
-  
-  (let ([s (add-commas)])
-    (list->string
-     (if (char=? #\, (car s))
-         (cdr s)
-         s))))
+(define (max-range f xmin xmax ymin ymax)
+  (for*/fold ([v 0]) ([x (in-range xmin xmax)]
+                      [y (in-range ymin ymax)])
+    (max v (f x y))))
 
 (define (solve)
-  (for*/fold ([v 0]) ([x (in-range 20)]
-                      [y (in-range 20)]
-                      [f (in-list (list row col diag))])
-    (let* ([n* (f x y)]
-           [n  (apply * n*)]
-           [vv (max n v)])
-      #;(printf "~a ~a ~a ~a ~a ~a ~a~%" 
-              (pad 4 (object-name f)) 
-              (pad 2 x) (pad 2 y) 
-              (pad 13 n*) 
-              (lpad 13 (commify n))
-              (pad 13 (commify v))
-              (commify vv))
-      vv)))
+  (max (max-range row       0 20 0 17)
+       (max-range col       0 17 0 20)
+       (max-range diag-down 0 17 0 17)
+       (max-range diag-up   3 20 0 17)))
+       
 
+    
