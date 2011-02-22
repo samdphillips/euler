@@ -6,19 +6,21 @@ The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
 Find the sum of all the primes below two million.
 |#
 
-(require (only-in racket/function const))
-
 (define (solve [n 2000000])
-  (define ((sieve p prime?) n)
-    (if (zero? (modulo n p)) #f (prime? n)))  
+  (define numbers (make-vector (- n 2) #t))
   
-  (define (next sum m prime?)    
-    (cond [(>= m n)   sum]
-          [(prime? m)
-           (let ([sum (+ sum m)])
-             #;(printf "~a ~a~%" m sum)
-             (next sum (+ 2 m) (sieve m prime?)))]
-          [else
-           (next sum (+ 2 m) prime?)]))
+  (define (prime? i)
+    (vector-ref numbers (- i 2)))
   
-  (next 2 3 (sieve 2 (const #t))))
+  (for/fold ([s 0]) ([i (in-range 2 n)])
+    (if (prime? i)
+        (begin 
+          (for ([j (in-range (* 2 i) n i)])
+            (vector-set! numbers (- j 2) #f))
+          (+ s i))
+        s)))
+  
+  
+    
+  
+  
