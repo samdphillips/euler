@@ -59,4 +59,24 @@ How many routes are there through a 20×20 grid?
          (lambda () (step st c))
          loop))))
 
+(define (solve3 w [h w])
+  (define (paths x y)
+    (if (or (= x w) (= y h)) 
+        1
+        (+ (paths (add1 x) y) (paths x (add1 y)))))
+  
+  (paths 0 0))
 
+(define (solve4 w [h w])
+  (define table
+    (make-hash null))
+  
+  (define (paths x y)
+    (cond [(hash-ref table (cons x y) #f) => values]
+          [(or (= x w) (= y h)) 1]
+          [else
+           (let ([v (+ (paths (add1 x) y) (paths x (add1 y)))])
+             (hash-set! table (cons x y) v)
+             v)]))
+  
+  (paths 0 0))
