@@ -43,6 +43,8 @@ secret passcode of unknown length.
 (define score
   (match-lambda
     [(cons _ x*)
+     (sum (map length x*))
+     #;
      (factorial (sum (map length x*)))]))
 
 (define (sort-score st*)  
@@ -73,7 +75,8 @@ secret passcode of unknown length.
      (append st* (expand st)))))
 
 (define (solve [st* init-state])
-  (let ([st (car (expand* st*))])
-    (if (null? (cdr st))
-        (car st)
-        (solve (list st)))))
+  (let ([st* (take (expand* st*) 4)])
+    (printf "~a~%" (map score st*))
+    (if (null? (cdar st*))
+        (caar st*)
+        (solve st*))))
