@@ -43,9 +43,7 @@ secret passcode of unknown length.
 (define score
   (match-lambda
     [(cons _ x*)
-     (sum (map length x*))
-     #;
-     (factorial (sum (map length x*)))]))
+     (sum (map length x*))]))
 
 (define (sort-score st*)  
   (sort st* < #:key score #:cache-keys? #t))
