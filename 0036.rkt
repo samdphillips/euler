@@ -11,71 +11,51 @@ palindromic in base 10 and base 2.
 not include leading zeros.)
 |#
 
-(require racket/function
-         racket/list
-         racket/match
-         racket/stream)
+(require racket/generator
+         racket/sequence)
 
-(define (digits-sub1 n*)
-  (cond [(null? n*) n*]
-        [(zero? (car n*))
-         (cons 9 (digits-sub1 (cdr n*)))]
-        [else
-         (cons (sub1 (car n*))
-               (cdr n*))]))
+(define (igits b)
+  (define (rec n [a null])
+    (cond [(zero? n) a]
+          [else
+            (define-values (q r) (quotient/remainder n b))
+            (rec q (cons r a))]))
+  rec)
 
-(define digits-end?
-  (match-lambda
-    [(list (? zero?) ... 1) #t]
-    [_ #f]))
+(define digits (igits 10))
+(define bits   (igits 2))
 
-(define (digits n)
-  (make-do-sequence
-   (lambda ()     
-     (values
-      values
-      digits-sub1
-      (make-list n 9)
-      (const #t)        
-      (const #t)
-      (lambda (pos ignored)
-        (not (digits-end? pos)))))))
+(define (build-int n*)
+  (for/fold ([v 0]) ([n n*])
+    (+ n (* v 10))))
 
-(define (palindrome n)
-  (define (digits->number n*)
-    (for/fold ([n 0]) ([d (in-list n*)])
-      (+ d (* n 10)))) 
-  
-  (if (even? n)
-      (stream-map
-       (lambda (n*)
-         (digits->number
-          (append (reverse n*) n*)))
-       (digits (/ n 2)))
-      
-      (make-do-sequence
-       (lambda ()
-         (let-values ([(more? next) 
-                       (sequence-generate
-                        (digits (/ (sub1 n) 2)))])
-           (values
-            (match-lambda
-              [(cons mid cur)
-               (digits->number
-                (append (reverse cur) (list mid) cur))])
-            (match-lambda
-              [(cons 0 cur)   (cons 9 (next))]
-              [(cons mid cur) (cons (sub1 mid) cur)])
-            (cons 9 (next))
-            (const #t)
-            (const #t)
-            (match-lambda*
-              [(list (cons 0 cur) _) (more?)]
-              [_ #t])))))))
+(define (dec-palindromes n)
+  (define middle
+    (if (odd? n)
+        (sequence-map list 10)
+        (list null)))
+  (define n/2   (quotient n 2))
+  (define end   (expt 10 n/2))
+  (define start (expt 10 (sub1 n/2)))
+  (in-generator
+    (for* ([x (in-range start end)]
+           [m middle])
+      (define d (digits x))
+      (yield (build-int (append d m (reverse d)))))))
 
-(define the-nums
-    (stream-filter
-     odd?
-     (for/fold ([s empty-stream]) ([i (in-range 2 7)])
-       (stream-append s (palindrome i)))))
+(define (binary-palindrome? n)
+  (define b (bits n))
+  (equal? b (reverse b)))
+
+(define (two-base-palindromes)
+  (sequence-filter 
+    binary-palindrome?
+    (for/fold ([p* '(1 3 5 7 9)]) ([p (in-range 2 7)])
+      (sequence-append p*
+                       (sequence-filter
+                         odd?
+                         (dec-palindromes p))))))
+
+(define (solve)
+  (for/sum ([n (two-base-palindromes)]) n))
 
