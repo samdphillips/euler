@@ -15,49 +15,58 @@ How many different ways can £2 be made using any number of coins?
 
 |#
 
-(require (only-in unstable/sequence
-                  in-slice)
-         racket/format
-         racket/generator)
+(module solution racket/base
+  (require racket/format
+           racket/generator
+           racket/sequence)
 
-(define coins
-  '(200 100 50 20 10 5 2 1))
+  (provide solve)
 
-(define memos
-  (make-vector (* (length coins) 200) #f))
+  (define coins
+    '(200 100 50 20 10 5 2 1))
 
-(define (show-memos)
-  (for ([row (in-slice (length coins) memos)]
-        [elem (in-naturals 1)])
-    (printf "~a ~a~%" (~a elem #:width 3) row)))
+  (define memos
+    (make-vector (* (length coins) 200) #f))
 
-(define (in-list* ls)
-  (in-generator
-    (define (once ls)
-      (unless (null? ls)
-        (yield ls)
-        (once (cdr ls))))
-    (once ls)))
+  (define (show-memos)
+    (for ([row (in-slice (length coins) memos)]
+          [elem (in-naturals 1)])
+      (printf "~a ~a~%" (~a elem #:width 3) row)))
 
-(define-syntax-rule (memoize (amt use) body ...)
-  (begin
-    (define k (+ (* (length coins) (sub1 amt))
-                 (sub1 (length use))))
-    (cond [(vector-ref memos k) => values]
-          [else
-            (let ([v (begin body ...)])
-              (vector-set! memos k v)
-              v)])))
+  (define (in-list* ls)
+    (in-generator
+      (define (once ls)
+        (unless (null? ls)
+          (yield ls)
+          (once (cdr ls))))
+      (once ls)))
 
-(define (comb amt use)
-  (memoize (amt use)
-    (for/sum ([c* (in-list* use)])
-      (define c (car c*))
-      (cond [(= amt c) 1]
-            [(< amt c) 0]
+  (define-syntax-rule (memoize (amt use) body ...)
+    (begin
+      (define k (+ (* (length coins) (sub1 amt))
+                   (sub1 (length use))))
+      (cond [(vector-ref memos k) => values]
             [else
-              (comb (- amt c) c*)]))))
+              (let ([v (begin body ...)])
+                (vector-set! memos k v)
+                v)])))
 
-(define (solve)
-  (comb 200 coins))
+  (define (comb amt use)
+    (memoize (amt use)
+      (for/sum ([c* (in-list* use)])
+        (define c (car c*))
+        (cond [(= amt c) 1]
+              [(< amt c) 0]
+              [else
+                (comb (- amt c) c*)]))))
 
+  (define (solve)
+    (comb 200 coins))
+)
+
+(module test "solutions.rkt"
+  0031
+  (require (submod ".." solution))
+
+  (check-equal? (solve) the-solution)
+)
