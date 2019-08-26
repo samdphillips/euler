@@ -105,5 +105,5 @@ Find the greatest product of five consecutive digits in the
   (check-true  (contains-zero? "12340"))
 
   (check-equal? (solve 4) 5832)
-  (check-equal? (solve 13) solution)
+  (check-equal? (solve 13) the-solution)
 )

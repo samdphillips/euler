@@ -18,11 +18,11 @@
        (~a "solutions/" _ ".rktd")
        (datum->syntax #'solution-num _))
 
-   #:with solution
-   (datum->syntax #'solution-num 'solution)
+   #:with the-solution
+   (datum->syntax #'solution-num 'the-solution)
 
    #'(#%module-begin
-      (define solution
+      (define the-solution
         (call-with-input-file file-name read))
       body ...)])
 

@@ -41,5 +41,5 @@ Find the sum of all the multiples of 3 or 5 below 1000.
   (require (prefix-in s1: (submod ".." solution1))
            (prefix-in s2: (submod ".." solution2)))
   
-  (check-equal? (s1:solve) solution)
-  (check-equal? (s2:solve) solution))
+  (check-equal? (s1:solve) the-solution)
+  (check-equal? (s2:solve) the-solution))
