@@ -65,23 +65,15 @@ Find the greatest product of five consecutive digits in the
            (- (char->integer c) 48))
          (string->list s)))
 
-  (struct substring-stream
-    (string pos len)
-    #:methods gen:stream
-    [
-     (define (stream-empty? ss)
-       (match-define (substring-stream s pos len) ss)
-       (> (+ pos len) (string-length s)))
-     (define (stream-first ss)
-       (match-define (substring-stream s pos len) ss)
-       (substring s pos (+ pos len)))
-     (define (stream-rest ss)
-       (match-define (substring-stream s pos len) ss)
-       (substring-stream s (add1 pos) len))
-    ])
-
   (define (make-substring-stream s len)
-    (substring-stream s 0 len))
+    (define slen (string-length s))
+    (define (step pos)
+      (cond
+        [(> (+ pos len) slen) empty-stream]
+        [else
+          (stream-cons (substring s pos (+ pos len))
+                       (step (add1 pos)))]))
+    (step 0))
 
   (define (solve m)
     (define the-numbers
