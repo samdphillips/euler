@@ -16,46 +16,46 @@ when writing out numbers is in compliance with British usage.
 
 |#
 
-(require racket/dict)
-
 (define (build-table start noms)
-  (for/list ([nom (in-list noms)]
+  (for/hash ([nom (in-list noms)]
              [n   (in-naturals start)])
-    (cons n nom)))
+    (values n nom)))
 
 (define ones
-  (let ([table (build-table 1 (list "one"   "two"   "three" 
-                                    "four"  "five"  "six" 
-                                    "seven" "eight" "nine"))])           
+  (let ([table (build-table 1 (list "one"   "two"   "three"
+                                    "four"  "five"  "six"
+                                    "seven" "eight" "nine"))])
     (lambda (n)
-      (dict-ref table n))))
+      (hash-ref table n))))
 
 (define teens
-  (let ([table (build-table 10 (list "ten"      "eleven"    "twelve"   
+  (let ([table (build-table 10 (list "ten"      "eleven"    "twelve"
                                      "thirteen" "fourteen"  "fifteen"
-                                     "sixteen"  "seventeen" "eighteen" 
-                                     "nineteen"))])           
+                                     "sixteen"  "seventeen" "eighteen"
+                                     "nineteen"))])
     (lambda (n)
-      (dict-ref table n))))
+      (hash-ref table n))))
 
 (define tens
-  (let ([table (build-table 2 (list "twenty" "thirty" "forty" 
+  (let ([table (build-table 2 (list "twenty" "thirty" "forty"
                                     "fifty"  "sixty"  "seventy"
-                                    "eighty" "ninety"))])           
+                                    "eighty" "ninety"))])
     (lambda (n)
       (cond [(< n 10) (ones n)]
             [(< n 20) (teens n)]
             [else
-             (let-values ([(q r) (quotient/remainder n 10)])
-               (string-append 
-                (dict-ref table q) (if (zero? r) "" (ones r))))]))))
+              (define-values (q r)
+                (quotient/remainder n 10))
+              (string-append
+                (hash-ref table q) (if (zero? r) "" (ones r)))]))))
 
 (define (hundreds n)
-  (let-values ([(q r) (quotient/remainder n 100)])
-    (string-append (ones q) "hundred" 
-                   (if (zero? r)
-                       ""
-                       (string-append "and" (tens r))))))
+  (define-values (q r)
+    (quotient/remainder n 100))
+  (string-append (ones q) "hundred"
+                 (if (zero? r)
+                     ""
+                     (string-append "and" (tens r)))))
 
 (define (number->name n)
   (cond [(= n 1000) "onethousand"]
@@ -65,6 +65,7 @@ when writing out numbers is in compliance with British usage.
 
 (define (solve)
   (for/fold ([s 0]) ([i (in-range 1 1001)])
-    #;(printf "~a~%" i)
     (+ s (string-length (number->name i)))))
+
+(module* main #f (solve))
 
